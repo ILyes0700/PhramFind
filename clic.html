@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmFind</title>
+  <link rel="website icon" href="i1.png" type="png">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+    }
+    img {
+      cursor: pointer;
+      width: 150px;
+      height: auto;
+      transition: transform 0.3s;
+    }
+    img:hover {
+      transform: scale(1.1);
+    }
+    .chatbot {
+      display: none; /* Caché par défaut */
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      height: 400px;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+    .chatbot-header {
+      background: #0078D7;
+      color: white;
+      padding: 10px;
+      font-size: 18px;
+      text-align: center;
+      position: relative;
+    }
+    .chatbot-header button {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      background: transparent;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .chatbot-messages {
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    .chatbot-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+    .chatbot-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+    .chatbot-input button {
+      padding: 10px;
+      background: #0078D7;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .fle{
+        width: 50px;
+        height: 50px;
+    }
+    .bot{
+        height: 150px;
+        width: 250px;
+    }
+  </style>
+</head>
+<body>
+    <a href="log11.php" class="pt-5" ><img src="icons8-flèche-gauche-50.png" class="fle" alt=""></a>
+  <h1 style="color: blue;">PharmFind Intelligent</h1>
+  <p style="color: #0078D7;">Cliquez sur l'image pour ouvrir le chatbot :</p>
+  <img src="bott.png" alt="Ouvrir Chatbot" id="openChatbot" class="bot">
+
+  <div class="chatbot" id="chatbot">
+    <div class="chatbot-header">
+        PharmFind Intelligent
+      <button id="closeChatbot">X</button>
+    </div>
+    <div class="chatbot-messages" id="messages">
+      <p style="color: #0078D7;">Bonjour ! Décrivez vos symptômes pour obtenir de l'aide.</p>
+    </div>
+    <div class="chatbot-input">
+      <input type="text" id="userInput" placeholder="Écrivez vos symptômes ici...">
+      <button id="sendMessage">Envoyer</button>
+    </div>
+  </div>
+
+  <script>
+    // Base de données médicale
+    const database = [
+      {
+        maladie: "Anémie",
+        symptomes: ["fatigue", "vertiges", "faiblesse", "essoufflement"],
+        medicaments: ["Suppléments de fer", "Acide folique", "Vitamine B12"]
+      },
+      {
+        maladie: "Hypotension",
+        symptomes: ["vertiges", "maux de tête", "fatigue", "vision floue"],
+        medicaments: ["Hydratation", "Aliments salés", "Fludrocortisone"]
+      },
+      {
+        maladie: "Migraine",
+        symptomes: ["maux de tête sévères", "vertiges", "nausées", "sensibilité à la lumière"],
+        medicaments: ["Ibuprofène", "Sumatriptan", "Paracétamol"]
+      },
+      {
+        maladie: "Grippe",
+        symptomes: ["fièvre", "maux de tête", "courbatures", "fatigue"],
+        medicaments: ["Paracétamol", "Ibuprofène","Doliprane"]
+      },
+      {
+        maladie: "COVID-19",
+        symptomes: ["fièvre", "toux", "perte de goût", "fatigue"],
+        medicaments: ["Paracétamol", "Repos", "Consultation médicale"]
+      },
+      {
+        maladie: "Asthme",
+        symptomes: ["essoufflement", "sifflements", "oppression thoracique"],
+        medicaments: ["Salbutamol", "Corticostéroïdes inhalés"]
+      },
+      {
+        maladie: "Infection urinaire",
+        symptomes: ["brûlures en urinant", "envie fréquente d'uriner", "douleur abdominale"],
+        medicaments: ["Nitrofurantoïne", "Fosfomycine"]
+      }
+    ];
+
+    // Sélectionner les éléments
+    const openChatbot = document.getElementById('openChatbot');
+    const closeChatbot = document.getElementById('closeChatbot');
+    const chatbot = document.getElementById('chatbot');
+    const userInput = document.getElementById('userInput');
+    const sendMessage = document.getElementById('sendMessage');
+    const messages = document.getElementById('messages');
+
+    // Ouvrir le chatbot
+    openChatbot.addEventListener('click', () => {
+      chatbot.style.display = 'block';
+    });
+
+    // Fermer le chatbot
+    closeChatbot.addEventListener('click', () => {
+      chatbot.style.display = 'none';
+    });
+
+    // Analyser les symptômes
+    function analyserEtat(saisie) {
+      const symptomesUtilisateur = saisie.toLowerCase().split(" ");
+      let resultat = "Aucune maladie correspondante trouvée. Consultez un médecin.";
+
+      database.forEach(entry => {
+        const symptomesCorrespondants = entry.symptomes.filter(symptome =>
+          symptomesUtilisateur.some(userSymptome => userSymptome.includes(symptome))
+        );
+
+        if (symptomesCorrespondants.length > 0) {
+          resultat = `Il semble que vous pourriez avoir ${entry.maladie}. 
+                      Symptômes correspondants : ${symptomesCorrespondants.join(", ")}.
+                      Médicaments recommandés : ${entry.medicaments.join(", ")}.`;
+        }
+      });
+
+      return resultat;
+    }
+    // Envoyer un message
+    sendMessage.addEventListener('click', () => {
+      const userMessage = userInput.value.trim();
+      if (userMessage) {
+        // Ajouter le message utilisateur
+        const userMsgElem = document.createElement('p');
+        userMsgElem.textContent = `Vous: ${userMessage}`;
+        messages.appendChild(userMsgElem);
+
+        // Ajouter une réponse du chatbot
+        const botMsgElem = document.createElement('p');
+        botMsgElem.textContent = analyserEtat(userMessage);
+        messages.appendChild(botMsgElem);
+
+        // Réinitialiser le champ de saisie
+        userInput.value = '';
+        messages.scrollTop = messages.scrollHeight; // Scroller vers le bas
+      }
+    });
+  </script>
+</body>
+</html>
